@@ -62,8 +62,11 @@ function CompanyLogo({ logo }) {
 /* ---------- Video-cover thumbnail with hover playback ---------- */
 function Thumb({ course, playing }) {
   const [videoPlaying, setVideoPlaying] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const videoRef = useRef(null);
-  const hasVideo = !!course.video?.src;
+  const wrapperRef = useRef(null);
+  const videoSources = course.video?.sources || [];
+  const hasVideo = videoSources.length > 0 || !!course.video?.src;
 
   useEffect(() => {
     const video = videoRef.current;
@@ -76,11 +79,30 @@ function Thumb({ course, playing }) {
       video.removeEventListener("play", onPlay);
       video.removeEventListener("pause", onPause);
     };
-  }, [course.video?.src]);
+  }, [course.video?.sources, course.video?.src]);
+
+  useEffect(() => {
+    if (!wrapperRef.current || isVisible || !hasVideo) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px", threshold: 0.1 }
+    );
+    observer.observe(wrapperRef.current);
+    return () => observer.disconnect();
+  }, [isVisible, hasVideo]);
 
   const toggleVideo = (e) => {
     if (!hasVideo) return;
     e.stopPropagation();
+    if (!isVisible) {
+      setIsVisible(true);
+      return;
+    }
     const video = videoRef.current;
     if (!video) return;
     if (video.paused) {
@@ -92,6 +114,7 @@ function Thumb({ course, playing }) {
 
   return (
     <div
+      ref={wrapperRef}
       className={"im-thumb" + (hasVideo ? " has-video" : "") + ((playing || videoPlaying) ? " is-playing" : "")}
       style={{ "--g1": course.g1, "--g2": course.g2 }}
       onClick={toggleVideo}
@@ -110,11 +133,17 @@ function Thumb({ course, playing }) {
           <video
             ref={videoRef}
             className="im-thumb-video"
-            preload="metadata"
+            preload={isVisible ? "metadata" : "none"}
             playsInline
             poster={course.video.poster}
-            src={course.video.src}
-          />
+          >
+            {isVisible && videoSources.map((source, index) => (
+              <source key={index} src={source.src} type={source.type} />
+            ))}
+            {isVisible && course.video?.src && (
+              <source src={course.video.src} type={course.video.type || "video/mp4"} />
+            )}
+          </video>
           <div className="im-thumb-video-overlay">
             <span className="im-thumb-video-label">TYT Matematik Ders Videosu</span>
           </div>
