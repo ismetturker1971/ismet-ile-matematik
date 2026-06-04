@@ -30,7 +30,7 @@ const COURSES = [
     tag: "ÇOK SATAN",
     new: false,
     video: {
-      src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+      src: "assets/videos/flower.mp4",
       poster: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=900&q=80"
     },
   },

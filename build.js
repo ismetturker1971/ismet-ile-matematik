@@ -21,6 +21,29 @@ async function build() {
   // copy image-slot.js as-is (it's a custom element script)
   fs.copyFileSync(path.resolve(__dirname, 'image-slot.js'), path.join(outDir, 'image-slot.js'));
 
+  // recursively copy assets/ (if present) into dist/assets
+  function copyRecursiveSync(src, dest) {
+    const exists = fs.existsSync(src);
+    const stats = exists && fs.statSync(src);
+    const isDirectory = exists && stats.isDirectory();
+    if (isDirectory) {
+      if (!fs.existsSync(dest)) fs.mkdirSync(dest);
+      fs.readdirSync(src).forEach(function(childItemName) {
+        copyRecursiveSync(path.join(src, childItemName), path.join(dest, childItemName));
+      });
+    } else if (exists) {
+      const parent = path.dirname(dest);
+      if (!fs.existsSync(parent)) fs.mkdirSync(parent, { recursive: true });
+      fs.copyFileSync(src, dest);
+    }
+  }
+
+  const assetsSrc = path.resolve(__dirname, 'assets');
+  const assetsDest = path.join(outDir, 'assets');
+  if (fs.existsSync(assetsSrc)) {
+    copyRecursiveSync(assetsSrc, assetsDest);
+  }
+
   // Read original index.html and remove existing <script> tags, then inject production React + bundle
   const indexSrc = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf8');
   // remove all script tags
