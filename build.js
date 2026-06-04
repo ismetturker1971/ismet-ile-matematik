@@ -8,7 +8,7 @@ async function build() {
 
   // Bundle app files into a single IIFE so they can run with global React
   await esbuild.build({
-    entryPoints: ['app.jsx', 'ui.jsx', 'sections.jsx', 'tweaks-panel.jsx', 'data.jsx'],
+    entryPoints: ['entry.jsx'],
     bundle: true,
     minify: true,
     sourcemap: false,
